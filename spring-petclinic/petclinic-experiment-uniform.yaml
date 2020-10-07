@@ -1,0 +1,31 @@
+apiVersion: iter8.tools/v1alpha2
+kind: Experiment
+metadata:
+  name: petclinic-abn-test-uniform
+spec:
+  service:
+    name: petclinic
+    baseline: petclinic-v1
+    candidates:
+      - petclinic-v2
+  networking:
+    hosts:
+      - name: petclinic.example.com
+        gateway: petclinic-gateway
+    id: petclinic.petclinic-iter8.svc.cluster.local
+  criteria:
+    - metric: iter8_mean_latency
+      threshold:
+        type: absolute
+        value: 100
+    - metric: iter8_error_rate
+      threshold:
+        type: absolute
+        value: 0.05
+  duration:
+    interval: 300s
+    maxIterations: 2
+  trafficControl:
+    strategy: uniform
+    maxIncrement: 50
+    onTermination: to_baseline

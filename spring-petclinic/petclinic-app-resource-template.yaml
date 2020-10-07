@@ -1,0 +1,48 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: petclinic-APP_VERSION
+  labels:
+    app: petclinic
+    version: APP_VERSION
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: petclinic
+      version: APP_VERSION
+  template:
+    metadata:
+      annotations:
+        sidecar.istio.io/inject: "true"
+        prometheus.io/scrape: "true"
+        prometheus.io/path: /metrics
+        prometheus.io/port: "8080"
+      labels:
+        app: petclinic
+        app.kubernetes.io/name: "petclinic-APP_VERSION"
+        version: APP_VERSION
+    spec:
+      serviceAccountName: petclinic-petclinic
+      containers:
+      - name: petclinic
+        image: kusumach/spring-petclinic:jdk11-Oj9-0423
+        imagePullPolicy: IfNotPresent
+        env:
+          - name: deployment
+            value: "petclinic-APP_VERSION"
+          - name: namespace
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            memory: REQ_MEM
+            cpu: REQ_CPU
+          limits:
+            memory: LIM_MEM
+            cpu: LIM_CPU
+---         
