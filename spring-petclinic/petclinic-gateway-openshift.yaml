@@ -1,0 +1,63 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: petclinic-gateway
+spec:
+  selector:
+    istio: ingressgateway # use istio default controller
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "istio-ingressgateway-istio-system.apps.kruize.lab.upshift.rdu2.redhat.com"
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  labels:
+    iter8-tools/router: petclinic.petclinic-iter8.svc.cluster.local
+    iter8-tools/role: stable
+  name: petclinic
+spec:
+  gateways:
+  - mesh
+  - petclinic-gateway
+  hosts:
+  - petclinic
+  - "istio-ingressgateway-istio-system.apps.kruize.lab.upshift.rdu2.redhat.com"
+  http:
+  - match:
+    - uri:
+        prefix: /owners
+    - uri:
+        prefix: /resources
+    - uri:
+        prefix: /webjars
+    - uri:
+        prefix: /vets.html
+    - uri:
+        prefix: /home
+    route:
+    - destination:
+        host: petclinic
+        port:
+          number: 8080
+        subset: iter8-stable
+      weight: 100
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  labels:
+    iter8-tools/router: petclinic.petclinic-iter8.svc.cluster.local
+    iter8-tools/role: stable
+  name: petclinic
+spec:
+  host: petclinic
+  subsets:
+  - labels:
+      app: petclinic
+      version: v1
+    name: iter8-stable
